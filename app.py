@@ -7,19 +7,14 @@ from validate_docbr import CPF, CNPJ
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'projeto-cliente-2025'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:123456@localhost:5432/meu_projeto'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
 bcrypt = Bcrypt(app)
 
-# =====================
-# MODELS
-# =====================
-
 class Usuario(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     cpf = db.Column(db.String(14), unique=True, nullable=False)
-    senha = db.Column(db.String(200), nullable=False)
+    senha = db.Column(db.String(255), nullable=False)
     tipo = db.Column(db.String(10), default='cliente')
 
 class Cliente(db.Model):
@@ -31,10 +26,6 @@ class Cliente(db.Model):
     email = db.Column(db.String(100))
     cadastrado_por = db.Column(db.String(14))
 
-# =====================
-# LOGIN MANAGER
-# =====================
-
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'
 
@@ -42,59 +33,62 @@ login_manager.login_view = 'login'
 def load_user(user_id):
     return Usuario.query.get(int(user_id))
 
-# =====================
-# ROTAS
-# =====================
-
 @app.route('/')
 def inicial():
     return render_template('index_inicial.html')
 
-# ---------- LOGIN ----------
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        cpf_login = request.form.get('cpf').replace(".", "").replace("-", "")
+        cpf_login = request.form.get('cpf').replace('.', '').replace('-', '')
         senha = request.form.get('senha')
 
         user = Usuario.query.filter_by(cpf=cpf_login).first()
 
-        if user and bcrypt.check_password_hash(user.senha, senha):
-            login_user(user)
-            return redirect(url_for('dashboard'))
+        if user:
+            if user.senha.startswith('$2b$'):
+                if bcrypt.check_password_hash(user.senha, senha):
+                    login_user(user)
+                    return redirect(url_for('dashboard'))
+            else:
+                if user.senha == senha:
+                    user.senha = bcrypt.generate_password_hash(senha).decode('utf-8')
+                    db.session.commit()
+                    login_user(user)
+                    return redirect(url_for('dashboard'))
 
-        flash('CPF ou senha inválidos.', 'danger')
+            flash('CPF ou senha inválidos.', 'error')
 
     return render_template('login.html')
 
-# ---------- REGISTRAR CONTA ----------
+
 @app.route('/registrar_conta', methods=['GET', 'POST'])
 def registrar_conta():
     if request.method == 'POST':
-        cpf_raw = request.form.get('cpf').replace(".", "").replace("-", "")
-        senha = request.form.get('senha')
-        tipo = request.form.get('tipo', 'cliente')
+        cpf_raw = request.form.get('cpf').replace('.', '').replace('-', '')
 
         if not CPF().validate(cpf_raw):
-            flash('CPF inválido!', 'danger')
+            flash('CPF inválido!')
             return redirect(url_for('registrar_conta'))
 
         if Usuario.query.filter_by(cpf=cpf_raw).first():
-            flash('Este CPF já possui cadastro.', 'warning')
+            flash('Este CPF já possui cadastro.')
             return redirect(url_for('registrar_conta'))
 
-        senha_hash = bcrypt.generate_password_hash(senha).decode('utf-8')
+        senha_hash = bcrypt.generate_password_hash(
+            request.form.get('senha')
+        ).decode('utf-8')
 
         novo_user = Usuario(
             cpf=cpf_raw,
             senha=senha_hash,
-            tipo=tipo
+            tipo=request.form.get('tipo', 'cliente')
         )
 
         db.session.add(novo_user)
         db.session.commit()
 
-        flash('Conta criada com sucesso!', 'success')
+        flash('Conta criada com sucesso!')
         return redirect(url_for('login'))
 
     return render_template('registrar_conta.html')
@@ -102,24 +96,21 @@ def registrar_conta():
 @app.route('/esqueci_senha', methods=['GET', 'POST'])
 def esqueci_senha():
     if request.method == 'POST':
-        doc_limpo = request.form.get('documento').replace(".", "").replace("-", "").replace("/", "")
+        doc = request.form.get('documento').replace('.', '').replace('-', '').replace('/', '')
         nova_senha = request.form.get('nova_senha')
 
-        user = Usuario.query.filter_by(cpf=doc_limpo).first()
+        user = Usuario.query.filter_by(cpf=doc).first()
 
-        if not user:
-            flash('Documento não encontrado.', 'danger')
-            return redirect(url_for('esqueci_senha'))
+        if user:
+            user.senha = bcrypt.generate_password_hash(nova_senha).decode('utf-8')
+            db.session.commit()
+            flash('Senha alterada com sucesso!')
+            return redirect(url_for('login'))
 
-        user.senha = bcrypt.generate_password_hash(nova_senha).decode('utf-8')
-        db.session.commit()
-
-        flash('Senha alterada com sucesso! Faça login.', 'success')
-        return redirect(url_for('login'))
+        flash('Documento não encontrado.')
 
     return render_template('esqueci_senha.html')
 
-# ---------- DASHBOARD ----------
 @app.route('/dashboard')
 @login_required
 def dashboard():
@@ -130,64 +121,22 @@ def dashboard():
 
     return render_template('index.html', clientes=clientes)
 
-# ---------- CADASTRAR CLIENTE ----------
-@app.route('/cadastrar', methods=['POST'])
-@login_required
-def cadastrar():
-    doc_original = request.form.get('documento')
-    doc_limpo = doc_original.replace(".", "").replace("-", "").replace("/", "")
-
-    if not (CPF().validate(doc_limpo) or CNPJ().validate(doc_limpo)):
-        flash('Documento (CPF/CNPJ) inválido!', 'danger')
-        return redirect(url_for('dashboard'))
-
-    novo_cliente = Cliente(
-        nome=request.form.get('nome'),
-        documento=doc_original,
-        endereco=request.form.get('endereco'),
-        telefone=request.form.get('telefone'),
-        email=request.form.get('email'),
-        cadastrado_por=current_user.cpf
-    )
-
-    db.session.add(novo_cliente)
-    db.session.commit()
-
-    flash('Cliente cadastrado com sucesso!', 'success')
-    return redirect(url_for('dashboard'))
-
-# ---------- EXCLUIR ----------
-@app.route('/excluir/<int:id>')
-@login_required
-def excluir(id):
-    cliente = Cliente.query.get_or_404(id)
-
-    if current_user.tipo == 'adm' or cliente.cadastrado_por == current_user.cpf:
-        db.session.delete(cliente)
-        db.session.commit()
-        flash('Registro excluído.', 'warning')
-
-    return redirect(url_for('dashboard'))
-
-# ---------- LOGOUT ----------
 @app.route('/logout')
-@login_required
 def logout():
     logout_user()
     return redirect(url_for('inicial'))
-
-# =====================
-# INIT
-# =====================
 
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
 
-        # cria admin padrão se não existir
         if not Usuario.query.filter_by(cpf='111').first():
-            senha_admin = bcrypt.generate_password_hash('111').decode('utf-8')
-            db.session.add(Usuario(cpf='111', senha=senha_admin, tipo='adm'))
+            admin = Usuario(
+                cpf='111',
+                senha=bcrypt.generate_password_hash('111').decode('utf-8'),
+                tipo='adm'
+            )
+            db.session.add(admin)
             db.session.commit()
 
     app.run(debug=True)
