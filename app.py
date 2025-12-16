@@ -6,27 +6,24 @@ from validate_docbr import CPF, CNPJ
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'projeto-cliente-2025'
 
-# --- CONEXÃO POSTGRESQL ---
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:123456@localhost:5432/meu_projeto'
 db = SQLAlchemy(app)
 
-# --- MODELOS DE DADOS ---
 class Usuario(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     cpf = db.Column(db.String(14), unique=True, nullable=False)
     senha = db.Column(db.String(100), nullable=False)
-    tipo = db.Column(db.String(10), default='cliente') # 'adm' ou 'cliente'
+    tipo = db.Column(db.String(10), default='cliente') 
 
 class Cliente(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     nome = db.Column(db.String(100), nullable=False)
-    documento = db.Column(db.String(20), nullable=False) # Armazena CPF ou CNPJ
+    documento = db.Column(db.String(20), nullable=False) 
     endereco = db.Column(db.String(200))
     telefone = db.Column(db.String(20))
     email = db.Column(db.String(100))
     cadastrado_por = db.Column(db.String(14))
 
-# --- CONFIGURAÇÃO DE LOGIN ---
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'
 
@@ -34,7 +31,6 @@ login_manager.login_view = 'login'
 def load_user(user_id):
     return Usuario.query.get(int(user_id))
 
-# --- ROTAS DE ACESSO ---
 
 @app.route('/')
 def inicial():
@@ -45,7 +41,6 @@ def registrar_conta():
     if request.method == 'POST':
         cpf_raw = request.form.get('cpf').replace(".", "").replace("-", "")
         
-        # Valida o CPF antes de criar a conta
         if not CPF().validate(cpf_raw):
             flash('CPF inválido!')
             return redirect(url_for('registrar_conta'))
@@ -62,6 +57,24 @@ def registrar_conta():
         
     return render_template('registrar_conta.html')
 
+@app.route('/esqueci_senha', methods=['GET', 'POST'])
+def esqueci_senha():
+    if request.method == 'POST':
+        doc_limpo = request.form.get('documento').replace(".", "").replace("-", "").replace("/", "")
+        nova_senha = request.form.get('nova_senha')
+
+        user = Usuario.query.filter_by(cpf=doc_limpo).first()
+
+        if user:
+            user.senha = nova_senha  
+            db.session.commit()
+            flash('Senha alterada com sucesso! Agora você já pode logar.')
+            return redirect(url_for('login'))
+        else:
+            flash('Documento não encontrado no sistema.')
+            
+    return render_template('esqueci_senha.html')
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
@@ -73,7 +86,6 @@ def login():
         flash('Credenciais inválidas.')
     return render_template('login.html')
 
-# --- PAINEL PRINCIPAL ---
 
 @app.route('/dashboard')
 @login_required
@@ -90,7 +102,6 @@ def cadastrar():
     doc_original = request.form.get('documento')
     doc_limpo = doc_original.replace(".", "").replace("-", "").replace("/", "")
     
-    # Valida se é um CPF ou CNPJ real
     if not (CPF().validate(doc_limpo) or CNPJ().validate(doc_limpo)):
         flash('Documento (CPF/CNPJ) inválido!')
         return redirect(url_for('dashboard'))
@@ -123,11 +134,9 @@ def logout():
     logout_user()
     return redirect(url_for('inicial'))
 
-# --- INICIALIZAÇÃO ---
 if __name__ == '__main__':
     with app.app_context():
         db.create_all() 
-        # Garante que exista um Administrador padrão
         if not Usuario.query.filter_by(cpf='111').first():
             db.session.add(Usuario(cpf='111', senha='111', tipo='adm'))
             db.session.commit()
