@@ -99,7 +99,6 @@ def registrar_conta():
 
     return render_template('registrar_conta.html')
 
-# ---------- ESQUECI SENHA ----------
 @app.route('/esqueci_senha', methods=['GET', 'POST'])
 def esqueci_senha():
     if request.method == 'POST':

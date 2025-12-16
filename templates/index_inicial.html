@@ -2,57 +2,85 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Bem-vindo ao Sistema</title>
+    <title>Gestão Profissional - Início</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <style>
         body {
-            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-            height: 100vh;
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            min-height: 100vh;
             display: flex;
             align-items: center;
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            color: white;
         }
-        .custom-card {
+        .welcome-card {
+            background: rgba(255, 255, 255, 0.98);
+            border-radius: 1.5rem;
+            border: none;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
             cursor: pointer;
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            border-radius: 24px;
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            text-decoration: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 250px;
         }
-        /* Efeito de realce que pediu */
-        .custom-card:hover {
-            transform: translateY(-15px) scale(1.03);
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4) !important;
-            background: rgba(255, 255, 255, 0.15);
-            filter: brightness(1.1);
+        .welcome-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.4);
         }
         .icon-box {
-            font-size: 4.5rem;
-            margin-bottom: 1.5rem;
-            transition: transform 0.3s ease;
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
         }
-        .custom-card:hover .icon-box {
-            transform: rotate(-5deg) scale(1.1);
+        .bg-login { background: #0d6efd; }
+        .bg-register { background: #198754; }
+        
+        .title-main {
+            font-weight: 800;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            text-shadow: 0 4px 10px rgba(0,0,0,0.3);
         }
     </style>
 </head>
-<body class="text-white">
+<body>
     <div class="container text-center">
-        <h1 class="mb-5 fw-bold display-4">Gestão <span class="text-primary">Profissional</span></h1>
-        <div class="row justify-content-center gap-4">
-            <div class="col-md-4 card custom-card p-5 shadow-lg" onclick="window.location.href='/login'">
-                <i class="bi bi-box-arrow-in-right icon-box text-primary"></i>
-                <h3 class="fw-bold">Já sou cadastrado</h3>
-                <p class="text-white-50 small">Aceda ao seu painel e gira os seus clientes.</p>
+        <h1 class="title-main mb-5">Gestão Profissional</h1>
+        
+        <div class="row justify-content-center g-4">
+            <div class="col-md-4">
+                <a href="/login" class="card welcome-card p-4 shadow-lg">
+                    <div class="icon-box bg-login shadow">
+                        <i class="bi bi-box-arrow-in-right text-white fs-2"></i>
+                    </div>
+                    <h4 class="fw-bold text-dark">Já sou cadastrado</h4>
+                    <p class="text-muted small">Clique para acessar seu painel</p>
+                </a>
             </div>
-            <div class="col-md-4 card custom-card p-5 shadow-lg" onclick="window.location.href='/registrar_conta'">
-                <i class="bi bi-person-plus-fill icon-box text-success"></i>
-                <h3 class="fw-bold">Quero me cadastrar</h3>
-                <p class="text-white-50 small">Crie a sua conta e comece agora mesmo.</p>
+
+            <div class="col-md-4">
+                <a href="/registrar_conta" class="card welcome-card p-4 shadow-lg">
+                    <div class="icon-box bg-register shadow">
+                        <i class="bi bi-person-plus-fill text-white fs-2"></i>
+                    </div>
+                    <h4 class="fw-bold text-dark">Quero me cadastrar</h4>
+                    <p class="text-muted small">Crie sua própria conta agora</p>
+                </a>
             </div>
         </div>
+
+        <div class="mt-5 pt-4 border-top border-secondary border-opacity-25">
+            <p class="text-white-50 small">© 2025 Sistema de Gestão de Clientes - Todos os direitos reservados.</p>
+        </div>
     </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
