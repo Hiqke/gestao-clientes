@@ -3,11 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <title>Recuperar Senha</title>
-
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-
-    <style>
+    <script src="https://unpkg.com/imask"></script> <style>
         body {
             background: linear-gradient(-45deg, #0f0c29, #302b63, #24243e, #000000);
             background-size: 400% 400%;
@@ -40,13 +38,8 @@
             color: #fff;
         }
 
-        .form-label {
-            color: #f8f9fa;
-        }
-
-        ::placeholder {
-            color: #ced4da;
-        }
+        .form-label { color: #f8f9fa; }
+        ::placeholder { color: #ced4da; }
     </style>
 </head>
 
@@ -56,38 +49,31 @@
     <div class="row justify-content-center">
         <div class="col-md-4">
 
-           {% with messages = get_flashed_messages(with_categories=true) %}
-  {% for category, message in messages %}
-    <div class="alert alert-{{ 'danger' if category == 'error' else 'success' }}
-         alert-dismissible fade show shadow-sm">
-        {{ message }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    </div>
-  {% endfor %}
-{% endwith %}
-
+            {% with messages = get_flashed_messages(with_categories=true) %}
+              {% if messages %}
+                {% for category, message in messages %}
+                  <div class="alert alert-{{ 'danger' if category == 'danger' or category == 'error' else 'success' }} alert-dismissible fade show shadow-sm">
+                      {{ message }}
+                      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                  </div>
+                {% endfor %}
+              {% endif %}
+            {% endwith %}
 
             <div class="card p-4 shadow-lg">
                 <h3 class="text-center mb-4 text-white">
-                    <i class="bi bi-shield-lock me-2"></i> Nova Senha
+                    <i class="bi bi-shield-lock me-2 text-warning"></i> Nova Senha
                 </h3>
 
-                <form method="POST">
+                <form method="POST" action="{{ url_for('esqueci_senha') }}">
                     <div class="mb-3">
                         <label class="form-label fw-bold">CPF ou CNPJ</label>
-                        <input type="text"
-                               name="documento"
-                               class="form-control"
-                               placeholder="000.000.000-00"
-                               required>
+                        <input type="text" id="doc_reset" name="documento" class="form-control" placeholder="000.000.000-00" required>
                     </div>
 
                     <div class="mb-3">
                         <label class="form-label fw-bold">Nova Senha</label>
-                        <input type="password"
-                               name="nova_senha"
-                               class="form-control"
-                               required>
+                        <input type="password" name="nova_senha" class="form-control" required>
                     </div>
 
                     <button type="submit" class="btn btn-warning w-100 fw-bold">
@@ -96,17 +82,25 @@
 
                     <hr class="text-secondary">
 
-                    <a href="/login"
-                       class="btn btn-link w-100 text-decoration-none text-light">
+                    <a href="{{ url_for('login') }}" class="btn btn-link w-100 text-decoration-none text-light">
                         ← Voltar ao Login
                     </a>
                 </form>
             </div>
-
+            <p class="text-center text-white-50 small mt-3">Sistema rodando em Intel Core i5-8400</p>
         </div>
     </div>
 </div>
 
+<script>
+    // Máscara dinâmica para aceitar CPF ou CNPJ
+    var docMask = IMask(document.getElementById('doc_reset'), {
+        mask: [
+            { mask: '000.000.000-00' },
+            { mask: '00.000.000/0000-00' }
+        ]
+    });
+</script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

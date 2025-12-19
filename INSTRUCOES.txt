@@ -1,20 +1,12 @@
-==================================================
-GUIA DE INSTALAÇÃO DO SISTEMA DE GESTÃO
-==================================================
+# Instalação e execução do projeto
 
-Para que o programa (app.exe) funcione corretamente, 
-siga estes passos no computador onde ele será instalado:
-
-1. INSTALAÇÃO DO BANCO DE DADOS:
-   - Instale o PostgreSQL 17 (ou versão superior).
-   - Durante a instalação, defina a senha como: 123456
-
-2. CONFIGURAÇÃO DO BANCO:
-   - Abra o pgAdmin 4.
-   - Clique com o botão direito em "Databases" -> "Create" -> "Database".
-   - Nome do banco: meu_projeto
-
-3. EXECUTAR O PROGRAMA:
-   - Abra a pasta "dist/app".
-   - Execute o arquivo "app.exe".
-   - O sistema abrirá no navegador no endereço: http://127.0.0.1:5000
+1. Instale o Python 3.14 (ou superior) no Windows.
+2. Instale o PostgreSQL (versão 17 recomendada).
+3. Abra o terminal na pasta do projeto.
+4. Execute o instalador:
+   python install.py
+   - Isso instalará todas as dependências e criará/atualizará o banco de dados.
+5. Para rodar o servidor:
+   python app.py
+6. Acesse no navegador:
+   http://127.0.0.1:5000

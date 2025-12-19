@@ -124,37 +124,53 @@ def excluir_cliente(id):
 @app.route('/registrar_conta', methods=['GET', 'POST'])
 def registrar_conta():
     if request.method == 'POST':
+        # Captura todos os dados do formulário
         cpf_raw = request.form.get('cpf', '').replace('.', '').replace('-', '')
         senha = request.form.get('senha')
         confirmar_senha = request.form.get('confirmar_senha')
+        
+        # Dados extras que você pediu
+        nome = request.form.get('nome')
+        telefone = request.form.get('telefone')
+        email = request.form.get('email')
+        rua = request.form.get('rua')
+        numero = request.form.get('numero')
+        bairro = request.form.get('bairro')
+        cep = request.form.get('cep')
+        cidade = request.form.get('cidade')
+        estado = request.form.get('estado')
 
-        # 🔐 valida senha igual
+
         if senha != confirmar_senha:
             flash('As senhas não coincidem.', 'danger')
             return redirect(url_for('registrar_conta'))
 
-        # 🧾 valida CPF
-        if not CPF().validate(cpf_raw):
-            flash('CPF inválido!', 'danger')
-            return redirect(url_for('registrar_conta'))
-
-        # 🔍 verifica se já existe
         if Usuario.query.filter_by(cpf=cpf_raw).first():
             flash('Este CPF já possui cadastro.', 'warning')
             return redirect(url_for('registrar_conta'))
 
-        # 🔐 hash da senha
+        # 1. Cria o Usuário (Login)
         senha_hash = bcrypt.generate_password_hash(senha).decode('utf-8')
-
-        novo_user = Usuario(
-            cpf=cpf_raw,
-            senha=senha_hash,
-            tipo='cliente'
-        )
-
+        novo_user = Usuario(cpf=cpf_raw, senha=senha_hash, tipo='cliente')
         db.session.add(novo_user)
-        db.session.commit()
 
+        # 2. Cria o Perfil do Cliente (Dados que aparecerão no relatório)
+        novo_cliente = Cliente(
+            nome=nome,
+            documento=cpf_raw,
+            telefone=telefone,
+            email=email,
+            rua=rua,
+            numero=numero,
+            bairro=bairro,
+            cep=cep,
+            cidade=cidade,
+            estado=estado,
+            cadastrado_por=cpf_raw # Ele mesmo se cadastrou
+        )
+        db.session.add(novo_cliente)
+        
+        db.session.commit()
         flash('Conta criada com sucesso! Faça login.', 'success')
         return redirect(url_for('login'))
 
@@ -210,10 +226,15 @@ def esqueci_senha():
 
 
 # ---------- PERFIL ----------
+# ---------- PERFIL ATUALIZADO ----------
 @app.route('/perfil')
 @login_required
 def perfil():
-    return render_template('perfil.html')
+    # Busca os dados detalhados na tabela Cliente usando o CPF do usuário logado
+    dados_cliente = Cliente.query.filter_by(documento=current_user.cpf).first()
+    
+    # Se o cliente ainda não tiver dados na tabela 'clientes', criamos um objeto vazio para não dar erro
+    return render_template('perfil.html', cliente=dados_cliente)
 
 # ---------- DASHBOARD ----------
 @app.route('/dashboard')
