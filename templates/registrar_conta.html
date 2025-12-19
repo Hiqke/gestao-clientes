@@ -2,108 +2,78 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Nova Conta - Sistema</title>
+    <title>Criar Conta</title>
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+
     <style>
-        /* Fundo Animado Padrão do seu Sistema */
         body {
-            background: linear-gradient(-45deg, #0f0c29, #302b63, #24243e, #000000);
-            background-size: 400% 400%;
-            animation: gradient 15s ease infinite;
+            background: linear-gradient(135deg, #0f172a, #1e293b);
             min-height: 100vh;
             display: flex;
             align-items: center;
         }
-
-        @keyframes gradient {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
+        .card {
+            background: rgba(255,255,255,0.98);
+            border-radius: 1.5rem;
+            border: none;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
-
-        /* Cartão com Efeito Vidro */
-        .register-card {
-            background: rgba(255, 255, 255, 0.1) !important;
-            backdrop-filter: blur(15px);
-            border: 1px solid rgba(255, 255, 255, 0.2) !important;
-            border-radius: 25px !important;
-            color: white !important;
-        }
-
-        .header-icon {
-            width: 80px; height: 80px;
-            background: #198754;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: -60px auto 20px;
-            border: 5px solid #1e293b;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
-        }
-
-        .form-control, .form-select, .input-group-text {
-            background: rgba(255, 255, 255, 0.05) !important;
-            border: 1px solid rgba(255, 255, 255, 0.2) !important;
-            color: white !important;
-        }
-
-        .form-control::placeholder { color: rgba(255, 255, 255, 0.5); }
     </style>
 </head>
+
 <body>
-    <div class="container">
-        <div class="row justify-content-center">
-            <div class="col-md-4">
-                <div class="card register-card p-4 mt-5 shadow-lg">
-                    <div class="header-icon">
-                        <i class="bi bi-person-plus-fill text-white fs-1"></i>
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-4">
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+              {% if messages %}
+                {% for categoria, msg in messages %}
+                  <div class="alert alert-{{ categoria }} alert-dismissible fade show">
+                      {{ msg }}
+                      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                  </div>
+                {% endfor %}
+              {% endif %}
+            {% endwith %}
+
+            <div class="card p-4">
+                <h3 class="text-center fw-bold mb-4">
+                    <i class="bi bi-person-plus-fill"></i> Criar Conta
+                </h3>
+
+                <form method="POST" action="{{ url_for('registrar_conta') }}">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small">CPF</label>
+                        <input type="text" name="cpf" class="form-control" placeholder="000.000.000-00" required>
                     </div>
-                    <h3 class="text-center fw-bold mb-4">Criar Conta</h3>
-                    
-                    <form method="POST">
-                        <div class="mb-3">
-                            <label class="form-label small fw-bold">CPF para Registro</label>
-                            <div class="input-group">
-                                <span class="input-group-text"><i class="bi bi-card-text"></i></span>
-                                <input type="text" name="cpf" class="form-control" placeholder="00000000000" required>
-                            </div>
-                        </div>
 
-                        <div class="mb-3">
-                            <label class="form-label small fw-bold">Tipo de Usuário</label>
-                            <select name="tipo" class="form-select" required>
-                                <option value="cliente" class="text-dark">Cliente Comum</option>
-                                <option value="adm" class="text-dark">Administrador</option>
-                            </select>
-                        </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small">Senha</label>
+                        <input type="password" name="senha" class="form-control" required>
+                    </div>
 
-                        <div class="mb-4">
-                            <label class="form-label small fw-bold">Sua Senha</label>
-                            <div class="input-group">
-                                <span class="input-group-text"><i class="bi bi-lock"></i></span>
-                                <input type="password" id="senha_reg" name="senha" class="form-control" placeholder="••••••••" required>
-                                <button class="btn btn-outline-light" type="button" onclick="toggleSenha('senha_reg')">
-                                    <i class="bi bi-eye"></i>
-                                </button>
-                            </div>
-                        </div>
+                    <div class="mb-4">
+                        <label class="form-label fw-bold small">Confirmar Senha</label>
+                        <input type="password" name="confirmar_senha" class="form-control" required>
+                    </div>
 
-                        <button type="submit" class="btn btn-success w-100 fw-bold py-2 mb-3 shadow">CADASTRAR</button>
-                        <div class="text-center">
-                            <a href="/" class="text-decoration-none small text-white-50">Cancelar e Voltar</a>
-                        </div>
-                    </form>
+                    <button type="submit" class="btn btn-success w-100 fw-bold py-2 mb-3">
+                        Criar Conta
+                    </button>
+                </form>
+
+                <div class="text-center border-top pt-3">
+                    <a href="{{ url_for('login') }}" class="text-decoration-none small">
+                        Já tenho conta
+                    </a>
                 </div>
             </div>
         </div>
     </div>
-    <script>
-        function toggleSenha(id) {
-            var x = document.getElementById(id);
-            x.type = x.type === "password" ? "text" : "password";
-        }
-    </script>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

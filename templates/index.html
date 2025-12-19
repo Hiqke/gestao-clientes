@@ -3,82 +3,51 @@
 <head>
     <meta charset="UTF-8">
     <title>Gestão de Clientes</title>
-
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
 </head>
-
 <body class="bg-light">
 
 <nav class="navbar navbar-dark {% if current_user.tipo == 'adm' %}bg-danger{% else %}bg-primary{% endif %} px-3 shadow">
-    <span class="navbar-brand">
-        <i class="bi bi-person-badge me-2"></i>
-        {% if current_user.tipo == 'adm' %}
-            PAINEL ADMINISTRADOR
-        {% else %}
-            ÁREA DO CLIENTE
-        {% endif %}
+    <span class="navbar-brand"><i class="bi bi-person-badge me-2"></i> 
+        {% if current_user.tipo == 'adm' %} PAINEL ADMINISTRADOR {% else %} ÁREA DO CLIENTE {% endif %}
     </span>
-
     <div class="d-flex align-items-center">
-        <span class="text-white me-3">
-            Usuário: <strong>{{ current_user.cpf }}</strong>
-        </span>
-        <a href="/logout" class="btn btn-light btn-sm fw-bold">
-            <i class="bi bi-box-arrow-right me-1"></i> Sair
-        </a>
+        <span class="text-white me-3">Usuário: <strong>{{ current_user.cpf }}</strong></span>
+        <a href="/logout" class="btn btn-light btn-sm fw-bold">Sair</a>
     </div>
 </nav>
 
 <div class="container mt-4">
-
-    <!-- FLASH MESSAGES -->
     {% with messages = get_flashed_messages(with_categories=true) %}
       {% if messages %}
         {% for category, message in messages %}
           <div class="alert alert-{{ category }} alert-dismissible fade show shadow-sm" role="alert">
-            {{ message }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            {{ message }} <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
           </div>
         {% endfor %}
       {% endif %}
     {% endwith %}
 
-    <!-- TABELA CLIENTE (APENAS PARA CLIENTE) -->
+    {# SEÇÃO DO CLIENTE #}
     {% if current_user.tipo != 'adm' %}
     <div class="card p-4 shadow-sm mb-4">
-        <h5><i class="bi bi-table me-2"></i> Meus Cadastros</h5>
-
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5><i class="bi bi-table me-2"></i> Meus Cadastros</h5>
+            <a href="/cadastrar_cliente" class="btn btn-primary fw-bold">
+                <i class="bi bi-plus-circle me-1"></i> Novo Cadastro
+            </a>
+        </div>
         <div class="table-responsive">
             <table class="table table-hover mt-3">
                 <thead class="table-dark">
-                    <tr>
-                        <th>Nome</th>
-                        <th>Documento</th>
-                        <th>Telefone</th>
-                        <th>Ações</th>
-                    </tr>
+                    <tr><th>Nome</th><th>Documento</th><th>Telefone</th><th>Ações</th></tr>
                 </thead>
                 <tbody>
-                    {% if clientes|length == 0 %}
-                    <tr>
-                        <td colspan="4" class="text-center text-muted">
-                            Nenhum registro encontrado
-                        </td>
-                    </tr>
-                    {% endif %}
-
                     {% for c in clientes %}
                     <tr>
-                        <td>{{ c.nome }}</td>
-                        <td>{{ c.documento }}</td>
-                        <td>{{ c.telefone }}</td>
-                        <td>
-                            <a href="/excluir/{{ c.id }}" class="btn btn-danger btn-sm"
-                               onclick="return confirm('Apagar este registro?')">
-                                <i class="bi bi-trash"></i>
-                            </a>
-                        </td>
+                        <td>{{ c.nome }}</td><td>{{ c.documento }}</td><td>{{ c.telefone }}</td>
+                        <td><a href="/excluir/{{ c.id }}" class="btn btn-danger btn-sm" onclick="return confirm('Excluir?')"><i class="bi bi-trash"></i></a></td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -87,59 +56,72 @@
     </div>
     {% endif %}
 
-    <!-- TABELA ADMIN -->
+    {# SEÇÃO DO ADM #}
     {% if current_user.tipo == 'adm' %}
-    <div class="card p-4 shadow-sm">
-        <h5><i class="bi bi-shield-lock me-2"></i> Monitoramento Geral</h5>
+<div class="card p-4 shadow-sm">
+    <h5><i class="bi bi-shield-lock me-2"></i> Monitoramento Geral</h5>
 
-        <div class="table-responsive">
-            <table class="table table-hover mt-3">
-                <thead class="table-dark">
-                    <tr>
-                        <th>Nome</th>
-                        <th>Documento</th>
-                        <th>Telefone</th>
-                        <th>E-mail</th>
-                        <th>Dono</th>
-                        <th>Ações</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% if clientes|length == 0 %}
-                    <tr>
-                        <td colspan="6" class="text-center text-muted">
-                            Nenhum cliente cadastrado
-                        </td>
-                    </tr>
-                    {% endif %}
-
-                    {% for c in clientes %}
-                    <tr>
-                        <td>{{ c.nome }}</td>
-                        <td>{{ c.documento }}</td>
-                        <td>{{ c.telefone }}</td>
-                        <td>{{ c.email }}</td>
-                        <td>
-                            <span class="badge bg-secondary">
-                                {{ c.cadastrado_por }}
-                            </span>
-                        </td>
-                        <td>
-                            <a href="/excluir/{{ c.id }}" class="btn btn-danger btn-sm"
-                               onclick="return confirm('Apagar este registro?')">
-                                <i class="bi bi-trash"></i>
-                            </a>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+    <!-- 🔍 CONSULTA POR CPF / CNPJ -->
+    <form method="POST" action="{{ url_for('buscar_cliente') }}">
+        <div class="input-group my-3">
+            <span class="input-group-text bg-white border-end-0">
+                <i class="bi bi-search text-danger"></i>
+            </span>
+            <input type="text"
+                   name="termo"
+                   class="form-control border-start-0"
+                   placeholder="Consultar por CPF ou CNPJ"
+                   required>
+            <button class="btn btn-danger fw-bold">
+                Consultar
+            </button>
         </div>
+    </form>
+
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead class="table-dark">
+                <tr>
+                    <th>Nome</th>
+                    <th>Documento</th>
+                    <th>Telefone</th>
+                    <th>E-mail</th>
+                    <th>Dono</th>
+                    <th>Ações</th>
+                    <th>Endereço</th>
+                </tr>
+            </thead>
+         <tbody>
+                {% for c in clientes %}
+                <tr>
+                    <td>{{ c.nome }}</td>
+                    <td>{{ c.documento }}</td>
+                    <td>{{ c.telefone }}</td>
+                    <td>{{ c.email }}</td>
+                    
+                    {# Coluna Dono #}
+                    <td><span class="badge bg-secondary">{{ c.cadastrado_por }}</span></td>
+                    
+                    {# Coluna Ações #}
+                    <td>
+                        <form method="POST" action="{{ url_for('excluir_cliente', id=c.id) }}">
+                            <button class="btn btn-danger btn-sm" onclick="return confirm('Excluir?')">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </form>
+                    </td>
+
+                    {# Coluna Endereço #}
+                    <td>
+                        {{ c.rua }}, {{ c.numero }} - {{ c.bairro }}<br>
+                        <small>{{ c.cidade }}/{{ c.estado }} - {{ c.cep }}</small>
+                    </td>
+                </tr>
+                {% endfor %} {# O endfor deve vir APÓS o fechamento da </tr> #}
+            </tbody>
+        </table>
     </div>
-    {% endif %}
-
 </div>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+{% endif %}
 </body>
 </html>
